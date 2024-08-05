@@ -508,13 +508,13 @@ class AdminDatasetController extends Controller
         );
 
         switch ($uploadStatus) {
-            case 'Submitted':
-                $contentToSend = $datasetUpload->renderNotificationEmailBody('Submitted');
-                $statusIsSet = $datasetUpload->setStatusToSubmitted($contentToSend, $previousStatus);
+            case 'DataAvailableForReview':
+                $contentToSend = $datasetUpload->renderNotificationEmailBody('DataAvailableForReview');
+                $statusIsSet = $datasetUpload->setStatusToDataAvailableForReview($contentToSend, $previousStatus);
 
                 break;
-            case 'DataPending':
-                $contentToSend = $datasetUpload->renderNotificationEmailBody('DataPending');
+            case 'DataPreparation':
+                $contentToSend = $datasetUpload->renderNotificationEmailBody('DataPreparation');
 
                 // If formdata has a defined custom email body, user it instead of the twig template
                 if (isset($_POST['Dataset']['emailBody']) && $_POST['Dataset']['emailBody'] != '') {
@@ -523,7 +523,7 @@ class AdminDatasetController extends Controller
                     ]);
                 }
 
-                $statusIsSet = $datasetUpload->setStatusToDataPending(
+                $statusIsSet = $datasetUpload->setStatusToDataPreparation(
                     $contentToSend, $model->submitter->email, $previousStatus
                 );
 

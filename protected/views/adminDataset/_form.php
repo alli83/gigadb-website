@@ -766,11 +766,11 @@ echo $form->hiddenField($model, "image_id");
 -->
 
 <script>
-let defaultDataPendingEmailBody= '';
+let defaultDataPreparationEmailBody= '';
 
 async function fetchEmailTemplate() {
   try {
-    const res = await fetch('/files/templates/DataPending.twig')
+    const res = await fetch('/files/templates/DataPreparation.twig')
     if (res.ok) {
       return res.text();
     }
@@ -782,25 +782,25 @@ async function fetchEmailTemplate() {
 }
 
 $(document).ready(async function() {
-  defaultDataPendingEmailBody = await fetchEmailTemplate()
-  if (defaultDataPendingEmailBody) {
-    $("#Dataset_emailBody").val(defaultDataPendingEmailBody);
+  defaultDataPreparationEmailBody = await fetchEmailTemplate()
+  if (defaultDataPreparationEmailBody) {
+    $("#Dataset_emailBody").val(defaultDataPreparationEmailBody);
   }
 })
 
-// if editor switched upload status to "data pending", a modal prompts to customize email body to send to author
+// if editor switched upload status to "data preparation", a modal prompts to customize email body to send to author
 $(document).ready(function() {
   $("#dataset-form").on("submit", function(e) {
     const uploadStatusInput = $("#Dataset_upload_status")
     const initialUploadStatus = uploadStatusInput.attr('data-initial-value');
     const currentUploadStatus = uploadStatusInput.val();
     const submitSourceId = $(':focus').attr('id');
-    const didSelectDataPending = initialUploadStatus !== currentUploadStatus && currentUploadStatus === 'DataPending';
+    const didSelectDataPreparation = initialUploadStatus !== currentUploadStatus && currentUploadStatus === 'DataPreparation';
     const didSubmitFromModal = submitSourceId === 'customizeEmailModalSubmitBtn' ||
         // NOTE need to include this case for Safari compatibility
         submitSourceId === 'customizeEmailModal';
 
-    if (didSelectDataPending && !didSubmitFromModal) {
+    if (didSelectDataPreparation && !didSubmitFromModal) {
       $('#customizeEmailModal').modal({
         backdrop: 'static',
         keyboard: false,
@@ -811,7 +811,7 @@ $(document).ready(function() {
 })
 
 function setDefaultEmailBody() {
-  $("#Dataset_emailBody").val(defaultDataPendingEmailBody);
+  $("#Dataset_emailBody").val(defaultDataPreparationEmailBody);
 }
 
 </script>

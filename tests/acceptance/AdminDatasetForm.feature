@@ -390,7 +390,8 @@ Feature: form to update dataset details
       | "AssigningFTPbox"        |
       | "UserUploadingData"      |
       | "DataAvailableForReview" |
-      | "DataPending"            |
+      | "UserProvidedData"       |
+      | "DataPreparation"        |
 
   @ok @dataset-status
   Scenario: Check dataset page with Curation status can be viewed using private URL
@@ -464,7 +465,8 @@ Feature: form to update dataset details
       | "AssigningFTPbox"        |
       | "UserUploadingData"      |
       | "DataAvailableForReview" |
-      | "DataPending"            |
+      | "UserProvidedData"       |
+      | "DataPreparation"        |
 
   @ok @dataset-status
   Scenario: Links to create mockup or to open mockup are not present for a published dataset

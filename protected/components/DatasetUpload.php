@@ -73,14 +73,14 @@ class DatasetUpload extends yii\base\BaseObject
     }
 
     /**
-     * method to set Dataset Upload status to DataAvailableForReview and notify reviewers
+     * method to set Dataset Upload status to UserProvidedData and notify reviewers
      *
      * @param string $content email content of notification
      * @return bool wether or not operation is successful
      */
-    public function setStatusToDataAvailableForReview(string $content): bool
+    public function setStatusToUserProvidedData(string $content): bool
     {
-        $statusChanged = $this->_datasetDAO->transitionStatus("UserUploadingData", "DataAvailableForReview") || $this->_datasetDAO->transitionStatus("DataPending", "DataAvailableForReview");
+        $statusChanged = $this->_datasetDAO->transitionStatus("UserUploadingData", "UserProvidedData") || $this->_datasetDAO->transitionStatus("DataPreparation", "UserProvidedData");
         if ($statusChanged) {
             $emailSent = $this->_fileUploadSrv->emailSend(
                 $this->_config["sender"],
@@ -88,7 +88,7 @@ class DatasetUpload extends yii\base\BaseObject
                 "Data available for review",
                 $content
             );
-            CurationLog::createlog("DataAvailableForReview", $this->_datasetDAO->getId());
+            CurationLog::createlog("UserProvidedData", $this->_datasetDAO->getId());
             return $statusChanged && $emailSent;
         }
         return false;
@@ -102,21 +102,21 @@ class DatasetUpload extends yii\base\BaseObject
      *
      * @return bool whether operation is successful
      */
-    public function setStatusToSubmitted(string $content, string $previousStatus = null): bool
+    public function setStatusToDataAvailableForReview(string $content, string $previousStatus = null): bool
     {
-        $statusChanged = $this->_datasetDAO->transitionStatus("DataAvailableForReview", "Submitted", null, $previousStatus);
+        $statusChanged = $this->_datasetDAO->transitionStatus("UserProvidedData", "DataAvailableForReview", null, $previousStatus);
 
         if ($statusChanged) {
-            Yii::log("Status changed to Submitted", 'info');
+            Yii::log("Status changed to DataAvailableForReview", 'info');
             $emailSent = $this->_fileUploadSrv->emailSend(
                 $this->_config["sender"],
                 $this->_config["curators_email"],
-                "Dataset has been submitted",
+                "Dataset has been DataAvailableForReview",
                 $content
             );
             return $emailSent;
         }
-        Yii::log("Failed to change status to Submitted", 'error');
+        Yii::log("Failed to change status to DataAvailableForReview", 'error');
         return $statusChanged;
     }
 
@@ -129,20 +129,20 @@ class DatasetUpload extends yii\base\BaseObject
      *
      * @return bool whether operation is successful
      */
-    public function setStatusToDataPending(string $content, string $authorEmail, string $previousStatus = null): bool
+    public function setStatusToDataPreparation(string $content, string $authorEmail, string $previousStatus = null): bool
     {
-        $statusChanged = $this->_datasetDAO->transitionStatus("Submitted", "DataPending", null, $previousStatus);
+        $statusChanged = $this->_datasetDAO->transitionStatus("DataAvailableForReview", "DataPreparation", null, $previousStatus);
         if ($statusChanged) {
-            Yii::log("Status changed to DataPending", 'info');
+            Yii::log("Status changed to DataPreparation", 'info');
             $emailSent = $this->_fileUploadSrv->emailSend(
                 $this->_config["sender"],
                 $authorEmail,
-                "Dataset has been set to DataPending",
+                "Dataset has been set to DataPreparation",
                 $content
             );
             return $emailSent;
         }
-        Yii::log("Failed to change status to DataPending", 'error');
+        Yii::log("Failed to change status to DataPreparation", 'error');
         return $statusChanged;
     }
 
