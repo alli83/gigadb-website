@@ -8,7 +8,35 @@ $params = array_merge(
 return [
     'id' => 'GigaDB Web Site',
     'basePath' => '/var/www',
+    'container' => [
+        'definitions' => [
+            'guzzleHttpClient' => [
+                'class' => 'GuzzleHttp\Client',
+            ],
+            'mailerService' => function () {
+               $tokenSrv = \Yii::createObject('tokenService');
+               $httpClient = \Yii::createObject('guzzleHttpClient');
+
+               return new GigaDB\services\MailerService($httpClient, $tokenSrv, Yii::app()->user->email, Yii::$app->params['mailer']);
+            },
+            'uploadStatusWorkflowService' => [
+                'class' => 'GigaDB\services\UploadStatusWorkflowService',
+            ],
+             'tokenService' => function () {
+                return new GigaDB\services\TokenService(
+                    3600,
+                    Yii::$app->jwt->getBuilder(),
+                    new \Lcobucci\JWT\Signer\Hmac\Sha256(),
+                    new GigaDB\models\UserDao,
+                    new \DateTime(),
+                );
+             },
+        ],
+    ],
     'components' => [
+        'guzzleHttpClient' => [
+            'class' => 'GuzzleHttp\Client',
+        ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
             'useFileTransport' => true,

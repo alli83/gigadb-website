@@ -1,6 +1,7 @@
 <?php
 
-use League\Flysystem\AdapterInterface;
+use GigaDB\services\UploadStatusWorkflowService;
+use GigaDB\services\MailerService;
 
 /**
  * Routing, aggregating and composing logic for administrative actions (CRUD) to a Dataset object
@@ -200,11 +201,8 @@ class AdminDatasetController extends Controller
         $previousUploadStatus = $model->upload_status;
         $isStatusAvailable = true;
 
-        // setting DatasetUpload, the busisness object for File uploading
-        $datasetUpload = $this->getDatasetUpload($model->identifier);
-
         if ($uploadStatus && $uploadStatus !== $previousUploadStatus) {
-            $isStatusAvailable = $this->checkTransition($datasetUpload, $model, $uploadStatus);
+            $isStatusAvailable = $this->checkTransition($model, $uploadStatus);
         }
 
         if (!$isStatusAvailable) {
@@ -251,8 +249,8 @@ class AdminDatasetController extends Controller
             }
 
             if ($uploadStatus && $uploadStatus !== $previousUploadStatus) {
-                Yii::log('Status changed to '.$uploadStatus, 'info');
-                $this->renderNotificationsAccordingToStatus($datasetUpload, $model);
+                Yii::log(sprintf('Status changed to %s', $uploadStatus), 'info');
+                $this->renderNotificationsAccordingToStatus($model);
             }
 
             // semantic kewyords update, using remove all and re-create approach
@@ -517,46 +515,35 @@ class AdminDatasetController extends Controller
         return $model;
     }
 
-    private function getDatasetUpload(string $identifier): DatasetUpload
+    private function checkTransition(Dataset $model, string $newStatus): bool
     {
-        // setting DatasetUpload, the busisness object for File uploading
-        $webClient = new \GuzzleHttp\Client();
-        $fileUploadSrv = Yii::app()->fileUploadService->getFileUploadService($webClient, $identifier);
+        /** @var UploadStatusWorkflowService $workflowService */
+        $workflowService = Yii::$container->get('uploadStatusWorkflowService');
 
-        return new DatasetUpload(
-            $fileUploadSrv->dataset,
-            $fileUploadSrv,
-            Yii::$app->params['dataset_upload']
-        );
-    }
-
-    private function checkTransition(DatasetUpload $datasetUpload, Dataset $model, string $newStatus): bool
-    {
         switch ($newStatus) {
             case 'Submitted':
-                return $datasetUpload->setStatusToSubmitted($model->upload_status);
+                return $workflowService->transitionStatus('DataAvailableForReview', $newStatus, null, $model->upload_status);
 
             case 'DataPending':
-                return $datasetUpload->setStatusToDataPending($model->upload_status);
+                return $workflowService->transitionStatus('Submitted', $newStatus, null, $model->upload_status);
 
             default:
                 return true;
         }
     }
 
-    private function renderNotificationsAccordingToStatus(DatasetUpload $datasetUpload, Dataset $model)
+    private function renderNotificationsAccordingToStatus(Dataset $model)
     {
+        /** @var MailerService $mailerService */
+        $mailerService = Yii::$container->get('mailerService');
+
         switch ($model->upload_status) {
             case 'Submitted':
-                $contentToSend = $datasetUpload->renderNotificationEmailBody('Submitted');
-                $statusIsSet = $datasetUpload->sendNotificationEmailBody($contentToSend, $model->upload_status);
+                $statusIsSet = $mailerService->sendEmailForStatusUpdate($model->upload_status, $model->identifier);
 
                 break;
             case 'DataPending':
-                $contentToSend = ($emailBody = Yii::$app->request->post('Dataset')['emailBody']) ?
-                    $this->processTemplateString($emailBody, ['identifier' => $model->identifier]) : $datasetUpload->renderNotificationEmailBody('DataPending');
-
-                $statusIsSet = $datasetUpload->sendNotificationEmailBody($contentToSend, $model->upload_status, $model->submitter->email);
+                $statusIsSet =  $mailerService->sendEmailForStatusUpdate($model->upload_status, $model->identifier, Yii::$app->request->post('Dataset')['emailBody']);
 
                 break;
             default:
