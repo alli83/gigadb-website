@@ -15,3 +15,6 @@ Feature: curation log entry under the dataset form
     And I should see "This DOI exists in datacite already, no need to mint, but the metadata is updated!"
     Then I am on "/adminDataset/update/id/8"
     And I should see "Dataset 8 - Check DOI: OK - update md response: OK"
+    And I should see "<?xml"
+    When I press the button "+"
+    Then I should see "Dataset as XML"

@@ -465,7 +465,8 @@ class AdminDatasetController extends Controller
             $log .= " ERROR: actions not completed";
         }
 
-        CurationLog::createGeneralCurationLogEntry($dataset->id, $log);
+        CurationLog::createGeneralCurationLogEntry($dataset->id, $log, $xml_data);
+
         echo json_encode($result);
         Yii::app()->end();
     }
