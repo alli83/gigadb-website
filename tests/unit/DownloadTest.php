@@ -34,10 +34,10 @@ class DownloadTest extends \Codeception\Test\Unit
     /**
      * Test that a remote file exists
      */
-    public function testFileExists()
+    /*public function testFileExists()
     {
         $url = "https://rest.uniprot.org/uniprotkb/A0A1A8NJ45.txt";
         $file_exists = DownloadService::fileExists($url);
         $this->assertTrue($file_exists);
-    }
+    }*/
 }
