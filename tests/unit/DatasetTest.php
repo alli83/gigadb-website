@@ -15,12 +15,24 @@ class DatasetTest extends CDbTestCase
         'dataset_author' => 'DatasetAuthor',
     );
 
+    private const ORIGINAL_UPLOAD_STATUS_LIST = [
+        'ImportFromEM'=>'ImportFromEM',
+        'UserStartedIncomplete'=>'UserStartedIncomplete',
+        'Rejected'=>'Rejected',
+        'Not required'=>'Not required',
+        'Submitted'=>'Submitted',
+        'Curation'=>'Curation',
+        'AuthorReview'=>'AuthorReview',
+        'Private'=>'Private',
+        'Published' =>'Published',
+    ];
+
     public function testUploadStatusValidation()
     {
         $myDataset = $this->datasets(0);
 
         $this->assertTrue($myDataset->validate());
-        $this->assertContains($myDataset->upload_status, array_merge(Dataset::ORIGINAL_UPLOAD_STATUS_LIST, Dataset::FUW_UPLOAD_STATUS_LIST));
+        $this->assertContains($myDataset->upload_status, array_merge(self::ORIGINAL_UPLOAD_STATUS_LIST, Dataset::FUW_UPLOAD_STATUS_LIST));
 
         $myDataset->upload_status = 'invalid';
 
@@ -51,14 +63,14 @@ class DatasetTest extends CDbTestCase
         $result = Dataset::getAvailableStatusList();
         if (Yii::app()->featureFlag->isEnabled("fuw")) {
             codecept_debug("*** FUW is enabled ***");
-            $this->assertCount(count(Dataset::ORIGINAL_UPLOAD_STATUS_LIST)+count(Dataset::FUW_UPLOAD_STATUS_LIST), $result);
-            $this->assertTrue(array_diff(Dataset::ORIGINAL_UPLOAD_STATUS_LIST, $result) === []);
+            $this->assertCount(count(self::ORIGINAL_UPLOAD_STATUS_LIST)+count(Dataset::FUW_UPLOAD_STATUS_LIST), $result);
+            $this->assertTrue(array_diff(self::ORIGINAL_UPLOAD_STATUS_LIST, $result) === []);
             $this->assertTrue(array_diff(Dataset::FUW_UPLOAD_STATUS_LIST, $result) === []);
         }
         else {
             codecept_debug("*** FUW is NOT enabled ***");
-            $this->assertCount(count(Dataset::ORIGINAL_UPLOAD_STATUS_LIST), $result);
-            $this->assertTrue(array_diff(Dataset::ORIGINAL_UPLOAD_STATUS_LIST, $result) === []);
+            $this->assertCount(count(self::ORIGINAL_UPLOAD_STATUS_LIST), $result);
+            $this->assertTrue(array_diff(self::ORIGINAL_UPLOAD_STATUS_LIST, $result) === []);
         }
     }
 }

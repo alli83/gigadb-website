@@ -28,18 +28,6 @@ class Dataset extends CActiveRecord
     public $union;
     public $types;
 
-    public const ORIGINAL_UPLOAD_STATUS_LIST = [
-        'ImportFromEM'=>'ImportFromEM',
-        'UserStartedIncomplete'=>'UserStartedIncomplete',
-        'Rejected'=>'Rejected',
-        'Not required'=>'Not required',
-        'Submitted'=>'Submitted',
-        'Curation'=>'Curation',
-        'AuthorReview'=>'AuthorReview',
-        'Private'=>'Private',
-        'Published' =>'Published',
-    ];
-
     public const FUW_UPLOAD_STATUS_LIST = [
         'AssigningFTPbox'=>'AssigningFTPbox',
         'UserUploadingData'=>'UserUploadingData',
@@ -92,7 +80,7 @@ class Dataset extends CActiveRecord
             array('identifier, excelfile_md5', 'length', 'max'=>32),
             array('title', 'length', 'max'=>300),
             array('upload_status', 'length', 'max'=>45),
-            array('upload_status', 'in', 'range'=>array_merge(self::ORIGINAL_UPLOAD_STATUS_LIST, self::FUW_UPLOAD_STATUS_LIST), 'message'=>'The value is not valid'),
+            array('upload_status', 'validateStatusInRange'),
             array('ftp_site', 'length', 'max'=>100),
             array('excelfile', 'length', 'max'=>50),
             array('description, publication_date, modification_date, image_id, fairnuse, types', 'safe'),
@@ -129,6 +117,15 @@ class Dataset extends CActiveRecord
             'datasetAttributes' => array(self::HAS_MANY, 'DatasetAttributes', 'dataset_id'),
             'attributes' => array(self::MANY_MANY, 'Attributes', 'dataset_attributes(dataset_id, attribute_id)'),
         );
+    }
+
+    public function validateStatusInRange($attribute, $params)
+    {
+        $validStatuses = CHtml::listData(\GigaDB\models\UploadStatus::find()->all(), 'id', 'name');
+
+        if (!in_array($this->$attribute, $validStatuses)) {
+            $this->addError($attribute, 'The selected upload status is invalid.');
+        }
     }
 
     public function getPolicy() {
@@ -700,9 +697,16 @@ class Dataset extends CActiveRecord
 
     public function getAvailableStatusList(): array
     {
-        if (Yii::app()->featureFlag->isEnabled("fuw"))
-            return CMap::mergeArray(self::ORIGINAL_UPLOAD_STATUS_LIST,self::FUW_UPLOAD_STATUS_LIST);
-        return self::ORIGINAL_UPLOAD_STATUS_LIST;
+        $uploadStatus =  \GigaDB\models\UploadStatus::find()->all();
+        $listUploadStatus = CHtml::listData($uploadStatus, 'name', 'humanReadableName');
+
+        if (Yii::app()->featureFlag->isEnabled("fuw")) {
+            return $listUploadStatus;
+        }
+
+        return array_filter($listUploadStatus, function ($v) {
+            return !in_array($v, self::FUW_UPLOAD_STATUS_LIST);
+        });
     }
 
     public  function nullifyDateValueIfEmpty()
