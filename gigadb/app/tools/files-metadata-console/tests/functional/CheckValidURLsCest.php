@@ -11,7 +11,7 @@ class CheckValidURLsCest
 {
     private const TEST_URLS = [
         "https://s3.ap-northeast-1.wasabisys.com/gigadb-datasets/dev/pub/10.5524/100001_101000/100006",
-        "http://gigasciencejournal.com/blog/badaboom",
+        "https://gigasciencejournal.com/blog/badaboom",
         "ftp://s3.ap-northeast-1.wasabisys.com/gigadb-datasets/dev/pub/10.5524/100001_101000/100006/readme_100006.txt",
         "https://s3.ap-northeast-1.wasabisys.com/gigadb-datasets/dev/pub/10.5524/100001_101000/100006/",
     ];
@@ -23,7 +23,7 @@ class CheckValidURLsCest
             "Wrong scheme (ftp://)",
             "URL appears to be a directory (/)",
         ];
-        $testWebClient = new Client([ 'allow_redirects' => false ]);
+        $testWebClient = new Client(['allow_redirects' => false]);
         $u = new URLsService(["urls" => self::TEST_URLS]);
         $report = $u->checkURLs($testWebClient);
         foreach ($expectedIssues as $index => $expectedIssue) {
